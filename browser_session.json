@@ -1,0 +1,362 @@
+[
+  {
+    "name": "lng",
+    "value": "es",
+    "domain": "www.pressreader.com",
+    "path": "/",
+    "expires": 1813874586.883886,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "__cf_bm",
+    "value": "J1Kr_sXqktGm5TStYoJ1rY_I2Dx83P4x1lL43IvlyKI-1779314581.4698765-1.0.1.1-LQ_KYjNo3MVZy05fxYT8gj02CwCR_wmlg1NavDqQ.LyXmaM5gSzOUISJrGqX2XPOW1StldD6AolurD0b7qWIlWAZynVlVcY71yVlHmuRvZUZLHOtseymRD.59ItH9ZTu",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1779316381.6732,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "CookieConsent",
+    "value": "{stamp:%27-1%27%2Cnecessary:true%2Cpreferences:true%2Cstatistics:true%2Cmarketing:true%2Cmethod:%27implied%27%2Cver:1%2Cutc:1779314584052%2Cregion:%27CO%27}",
+    "domain": "www.pressreader.com",
+    "path": "/",
+    "expires": 1781992984,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_ga",
+    "value": "GA1.1.122160436.1779314584",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1813874584.065781,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_gcl_au",
+    "value": "1.1.1101811129.1779314584",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1787090584,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_fbp",
+    "value": "fb.1.1779314584248.630266746632411588",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1787090587,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_twpid",
+    "value": "tw.1779314584367.708561130273148749",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1813010587.507204,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Strict"
+  },
+  {
+    "name": "CLID",
+    "value": "e08cd81b2e2e4a7b89eb4b0bdb6adb71.20260520.20270520",
+    "domain": "www.clarity.ms",
+    "path": "/",
+    "expires": 1810850584.400275,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "guest_id_marketing",
+    "value": "v1%3A177931458451476828",
+    "domain": ".twitter.com",
+    "path": "/",
+    "expires": 1813874584.562281,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "guest_id_ads",
+    "value": "v1%3A177931458451476828",
+    "domain": ".twitter.com",
+    "path": "/",
+    "expires": 1813874584.562351,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "personalization_id",
+    "value": "\"v1_Rfs2/JIGsM6RMTY6qeXE+Q==\"",
+    "domain": ".twitter.com",
+    "path": "/",
+    "expires": 1813874584.562373,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "guest_id",
+    "value": "v1%3A177931458451476828",
+    "domain": ".twitter.com",
+    "path": "/",
+    "expires": 1813874584.562393,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "__cf_bm",
+    "value": "dKHd2Zfbj2ta4I9V_GZPTpWeKb7UPJW6XGN4rYEEEDo-1779314584.456258-1.0.1.1-TCh_gnCJt0G1c7k3iYRkL3OzWbekB9xwhi8BMCJv5Lz3r3649DEITKOJ9Fgqx8WmEnmDen92ZcbaPeTqG1zn4E0EGuW0aa3LOX1Rlry2QCCUadQCjPUAKtChOOxV2LUa",
+    "domain": ".twitter.com",
+    "path": "/",
+    "expires": 1779316384.562414,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "MR",
+    "value": "0",
+    "domain": ".bat.bing.com",
+    "path": "/",
+    "expires": 1779919384.720393,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "test_cookie",
+    "value": "CheckForPermission",
+    "domain": ".doubleclick.net",
+    "path": "/",
+    "expires": 1779315484.641657,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "MUID",
+    "value": "07F2DA4F565F6ACE2307CD1057F06B81",
+    "domain": ".bing.com",
+    "path": "/",
+    "expires": 1813010584.926866,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "muc_ads",
+    "value": "669df173-b5b0-4ffc-84b6-babdb009291f",
+    "domain": ".t.co",
+    "path": "/",
+    "expires": 1813874584.726764,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "__cf_bm",
+    "value": "NnrXCCsPmf2Idjox7p7nlmYQVJN4ZTmOBpfXToMwUoc-1779314584.4546082-1.0.1.1-rbRdm2qybq.I__SSFNjz1Nv9A0Z09v8SFpz8XuPvgufzlw3mwR338D3_IXm11fgFl9pGSl1mzMgRiIjivjfdkwrRCj.RbzgLMDAvUC34.4K2TKBamuJ_b7L6vj0khb01",
+    "domain": ".t.co",
+    "path": "/",
+    "expires": 1779316384.726817,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_clck",
+    "value": "1r6xybc%5E2%5Eg67%5E0%5E2331",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1810850584,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "MR",
+    "value": "0",
+    "domain": ".c.bing.com",
+    "path": "/",
+    "expires": 1779919384.926934,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "SRM_B",
+    "value": "07F2DA4F565F6ACE2307CD1057F06B81",
+    "domain": ".c.bing.com",
+    "path": "/",
+    "expires": 1813010584.926948,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "SM",
+    "value": "C",
+    "domain": ".c.clarity.ms",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "MUID",
+    "value": "07F2DA4F565F6ACE2307CD1057F06B81",
+    "domain": ".clarity.ms",
+    "path": "/",
+    "expires": 1813010585.013157,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "MR",
+    "value": "0",
+    "domain": ".c.clarity.ms",
+    "path": "/",
+    "expires": 1779919385.013194,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "ANONCHK",
+    "value": "0",
+    "domain": ".c.clarity.ms",
+    "path": "/",
+    "expires": 1779315185.013212,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_clsk",
+    "value": "vbpm29%5E1779314585388%5E1%5E1%5Ex.clarity.ms%2Fcollect",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1779400985,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "AProfile",
+    "value": "5z/cOAdFh6IUje+aQZ38Ru8xYBcYAQAkCAAAQLEPE2XdPqQ=",
+    "domain": "www.pressreader.com",
+    "path": "/",
+    "expires": 1813874586.883988,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "Profile",
+    "value": "5vqiR9rx2wcqQ8koyR+KwNqJmUvgsIG68DZLhZeqvkT4T9I8xhGvKKaChAP/3RUg",
+    "domain": "www.pressreader.com",
+    "path": "/",
+    "expires": 1813874586.88403,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "PDAuth",
+    "value": "lWQU6wigy7xnN5WCGapQr0zs4pxRlY0ptPx/vgizfIk=",
+    "domain": "www.pressreader.com",
+    "path": "/",
+    "expires": 1779318186.884067,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "PDPAuth",
+    "value": "a5nK9rPjykYnjERIfyDGVyYsUrFoNwsG4kqCQbTDI20=",
+    "domain": "www.pressreader.com",
+    "path": "/",
+    "expires": 1781906586.884091,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_uetsid",
+    "value": "ad0aee40549711f19230b717aafe7d56",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1779400987,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_uetvid",
+    "value": "ad0b1b70549711f18d39e3bd82226d41",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1813010587,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_ga_TQBSZWGW16",
+    "value": "GS2.1.s1779314583$o1$g1$t1779314587$j56$l0$h0",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1813874587.569619,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ab.storage.userId.ddccb14d-5a22-47e4-b5c8-173a04aed25c",
+    "value": "g%3A61749666%7Ce%3Aundefined%7Cc%3A1779314587881%7Cl%3A1779314587884",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1813874587,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ab.storage.deviceId.ddccb14d-5a22-47e4-b5c8-173a04aed25c",
+    "value": "g%3A9feb9ab5-b381-c013-fe39-e3ec56994217%7Ce%3Aundefined%7Cc%3A1779314587886%7Cl%3A1779314587886",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1813874587,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ab.storage.sessionId.ddccb14d-5a22-47e4-b5c8-173a04aed25c",
+    "value": "g%3A4405f65d-9a57-3934-658c-21e0225ea4c9%7Ce%3A1779316387901%7Cc%3A1779314587884%7Cl%3A1779314587901",
+    "domain": ".pressreader.com",
+    "path": "/",
+    "expires": 1813874587,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  }
+]

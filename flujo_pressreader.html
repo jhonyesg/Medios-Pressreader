@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PressReader – Flujo de Descarga</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b22;
+    --bg3: #1c2333;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --green: #3fb950;
+    --green-bg: #0f2913;
+    --red: #f85149;
+    --red-bg: #2d0f0e;
+    --yellow: #d29922;
+    --yellow-bg: #271e0a;
+    --blue: #58a6ff;
+    --blue-bg: #0c1f3d;
+    --purple: #bc8cff;
+    --purple-bg: #1a0f2e;
+    --cyan: #39d353;
+    --orange: #ffa657;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  h1 { font-size: 28px; font-weight: 700; color: var(--blue); border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 8px; }
+  h2 { font-size: 19px; font-weight: 600; color: var(--text); margin: 40px 0 14px; padding-left: 10px; border-left: 3px solid var(--blue); }
+  h3 { font-size: 15px; font-weight: 600; color: var(--orange); margin: 22px 0 8px; }
+  p { color: var(--muted); margin-bottom: 10px; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 12.5px; }
+
+  /* ───── LEGEND ───── */
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0 32px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-ok   { background: var(--green-bg);  color: var(--green);  border:1px solid var(--green); }
+  .badge-err  { background: var(--red-bg);    color: var(--red);    border:1px solid var(--red); }
+  .badge-warn { background: var(--yellow-bg); color: var(--yellow); border:1px solid var(--yellow); }
+  .badge-info { background: var(--blue-bg);   color: var(--blue);   border:1px solid var(--blue); }
+  .badge-file { background: var(--purple-bg); color: var(--purple); border:1px solid var(--purple); }
+
+  /* ───── ARCH CARDS ───── */
+  .arch { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .arch-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .arch-card .title { font-weight: 700; color: var(--blue); margin-bottom: 6px; font-size: 13px; }
+  .arch-card .role  { color: var(--muted); font-size: 12px; }
+  .arch-arrow { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 22px; padding: 0 4px; }
+
+  /* ───── FLOW ───── */
+  .flow { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 28px; }
+  .flow-header { background: var(--bg3); padding: 14px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+  .flow-header:hover { background: #1e2838; }
+  .flow-num   { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .num-blue   { background: var(--blue-bg); color: var(--blue); border:1px solid var(--blue); }
+  .num-green  { background: var(--green-bg); color: var(--green); border:1px solid var(--green); }
+  .num-orange { background: #2a1a00; color: var(--orange); border:1px solid var(--orange); }
+  .num-purple { background: var(--purple-bg); color: var(--purple); border:1px solid var(--purple); }
+  .flow-title { font-weight: 600; font-size: 15px; flex: 1; }
+  .flow-tag   { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .tag-script { background: #0c1f3d; color: var(--blue); }
+  .tag-file   { background: var(--purple-bg); color: var(--purple); }
+  .chevron { transition: transform .2s; color: var(--muted); margin-left: 8px; }
+  .flow.open .chevron { transform: rotate(90deg); }
+  .flow-body { display: none; padding: 20px; border-top: 1px solid var(--border); }
+  .flow.open .flow-body { display: block; }
+
+  /* ───── PRINT BLOCKS ───── */
+  .terminal { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 12px 0; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12px; line-height: 1.7; overflow-x: auto; }
+  .t-ok   { color: var(--green); }
+  .t-err  { color: var(--red); }
+  .t-warn { color: var(--yellow); }
+  .t-info { color: var(--blue); }
+  .t-muted { color: var(--muted); }
+  .t-white { color: #e6edf3; }
+  .t-orange { color: var(--orange); }
+  .t-purple { color: var(--purple); }
+
+  /* ───── FILES AFFECTED ───── */
+  .files-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 12px 0; }
+  .file-item { background: var(--purple-bg); border: 1px solid var(--purple); border-radius: 8px; padding: 10px 14px; }
+  .file-item .fname { color: var(--purple); font-weight: 600; font-size: 12px; font-family: monospace; }
+  .file-item .fdesc { color: var(--muted); font-size: 11px; margin-top: 3px; }
+  .file-item .fop   { display: inline-block; font-size: 10px; margin-top: 4px; padding: 1px 7px; border-radius: 8px; }
+  .fop-rw  { background: #1a1040; color: #bc8cff; border:1px solid #bc8cff; }
+  .fop-r   { background: #0c1f3d; color: var(--blue); border:1px solid var(--blue); }
+  .fop-w   { background: var(--green-bg); color: var(--green); border:1px solid var(--green); }
+  .fop-net { background: #0a1f1a; color: #39d353; border:1px solid #39d353; }
+
+  /* ───── DECISION BOX ───── */
+  .decision { border: 1px dashed var(--yellow); background: var(--yellow-bg); border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+  .decision-title { color: var(--yellow); font-weight: 600; font-size: 12px; margin-bottom: 6px; }
+  .decision ul { padding-left: 18px; color: var(--muted); font-size: 12px; }
+  .decision li { margin: 3px 0; }
+  .decision li .path-ok  { color: var(--green); }
+  .decision li .path-err { color: var(--red); }
+
+  /* ───── SUMMARY TABLE ───── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12.5px; }
+  th { background: var(--bg3); color: var(--blue); text-align: left; padding: 10px 14px; border: 1px solid var(--border); font-weight: 600; }
+  td { padding: 9px 14px; border: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--bg2); }
+  td code { background: #0d1117; padding: 1px 5px; border-radius: 4px; color: var(--orange); }
+
+  /* ───── MISC ───── */
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  .section-note { background: var(--blue-bg); border: 1px solid var(--blue); border-radius: 8px; padding: 10px 14px; margin: 12px 0; color: var(--blue); font-size: 12.5px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+  .top-nav { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+  .nav-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg2); color: var(--muted); cursor: pointer; font-size: 12px; text-decoration: none; }
+  .nav-btn:hover { border-color: var(--blue); color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>PressReader — Flujo de Descarga</h1>
+  <p class="subtitle">Documentación visual del sistema de autenticación, descarga y publicación de periódicos.</p>
+
+  <div class="top-nav">
+    <a class="nav-btn" href="#arquitectura">Arquitectura</a>
+    <a class="nav-btn" href="#orquestador">run_descarga.py</a>
+    <a class="nav-btn" href="#auth">Browser Auth</a>
+    <a class="nav-btn" href="#downloader">Downloader (10 pasos)</a>
+    <a class="nav-btn" href="#archivos">Archivos afectados</a>
+    <a class="nav-btn" href="#errores">Tabla de errores</a>
+  </div>
+
+  <div class="legend">
+    <span class="badge badge-ok">✅ Éxito</span>
+    <span class="badge badge-err">❌ Error</span>
+    <span class="badge badge-warn">⚠️ Advertencia</span>
+    <span class="badge badge-info">🔵 Info / Progreso</span>
+    <span class="badge badge-file">📁 Archivo afectado</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 id="arquitectura">Arquitectura del Sistema</h2>
+  <p>Tres scripts coordinados. El punto de entrada recomendado es <code>run_descarga.py</code>.</p>
+
+  <div class="arch">
+    <div class="arch-card">
+      <div class="title">run_descarga.py</div>
+      <div class="role">🎛️ Orquestador principal<br>Valida tokens → refresca si caducan → llama al downloader</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-card">
+      <div class="title">pressreader_auth.py</div>
+      <div class="role">🌐 Autenticación browser<br>Playwright → login → captura JWT Bearer → guarda cookies</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-card">
+      <div class="title">pressreader_downloader.py</div>
+      <div class="role">📥 Motor de descarga<br>PageKeys → imágenes → OCR → PDF → FTP</div>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Script</th><th>Cuándo se ejecuta</th><th>Lee</th><th>Escribe</th></tr>
+    <tr><td><code>run_descarga.py</code></td><td>Punto de entrada. A mano o cron.</td><td><code>press.ini</code></td><td><code>press.ini</code> (token fresco)</td></tr>
+    <tr><td><code>pressreader_auth.py</code></td><td>Cuando un token falla. Llamado por <code>run_descarga</code> o el downloader.</td><td><code>auth.env</code>, <code>browser_session.json</code></td><td><code>browser_session.json</code></td></tr>
+    <tr><td><code>pressreader_downloader.py</code></td><td>Siempre. Llamado desde <code>run_descarga</code> o directo.</td><td><code>press.ini</code>, <code>auth.env</code></td><td>Imágenes JPG, PDFs, <code>press.ini</code> (token), FTP</td></tr>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <hr class="divider">
+  <h2 id="orquestador">run_descarga.py — Orquestador</h2>
+  <p>Ejecutar: <code>python run_descarga.py</code> &nbsp;|&nbsp; <code>python run_descarga.py Espectador</code></p>
+
+  <!-- PASO O-1 -->
+  <div class="flow open" id="o1">
+    <div class="flow-header" onclick="toggle('o1')">
+      <div class="flow-num num-blue">1</div>
+      <div class="flow-title">Leer press.ini y detectar medios</div>
+      <span class="flow-tag tag-script">run_descarga.py</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Lee <code>press.ini</code> y determina qué medios procesar (todos o el que se pasó como argumento).</p>
+      <div class="terminal">
+<span class="t-ok">🗞️  Medios a procesar: Tiempo, Espectador, Opinion, Publimetro, Motor</span>
+<span class="t-info">📅 Fecha: 2025-05-20 07:30</span>
+      </div>
+      <div class="decision">
+        <div class="decision-title">Decisión</div>
+        <ul>
+          <li><span class="path-ok">Argumento válido →</span> solo ese medio</li>
+          <li><span class="path-ok">Sin argumento →</span> todos los medios del .ini</li>
+          <li><span class="path-err">Argumento no encontrado →</span> imprime disponibles y termina con sys.exit(1)</li>
+        </ul>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">press.ini</div><div class="fdesc">Fuente de configuración de medios</div><span class="fop fop-r">Lectura</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO O-2 -->
+  <div class="flow open" id="o2">
+    <div class="flow-header" onclick="toggle('o2')">
+      <div class="flow-num num-blue">2</div>
+      <div class="flow-title">Validar tokens contra la API (PASO 1)</div>
+      <span class="flow-tag tag-script">run_descarga.py</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Para cada medio llama a <code>GetPageKeys</code> con el token actual y comprueba si la respuesta contiene <code>PageKeys</code>.</p>
+      <div class="terminal">
+<span class="t-white">============================================================</span>
+<span class="t-info">PASO 1: Validando tokens</span>
+<span class="t-white">============================================================</span>
+<span class="t-white"></span>
+<span class="t-info">[Espectador] 🔍 Validando token contra API...</span>
+<span class="t-ok">  ✅ Token válido</span>
+<span class="t-white"></span>
+<span class="t-info">[Publimetro] 🔍 Validando token contra API...</span>
+<span class="t-err">  ❌ Token inválido o caducado — refrescando...</span>
+<span class="t-info">  🌐 Obteniendo token fresco para Publimetro vía browser auth...</span>
+<span class="t-ok">  ✅ Token fresco obtenido (420 chars)</span>
+<span class="t-ok">  💾 Token guardado en press.ini [Publimetro]</span>
+<span class="t-white"></span>
+<span class="t-warn">[Motor] ⏭️  Plataforma propia — se omite validación</span>
+      </div>
+      <div class="decision">
+        <div class="decision-title">Decisión por medio</div>
+        <ul>
+          <li><span class="path-ok">Token OK →</span> continúa al downloader</li>
+          <li><span class="path-err">Token falla →</span> llama a <code>BrowserAuthenticator.get_fresh_token()</code> → guarda en press.ini</li>
+          <li><span class="path-err">No tiene token →</span> intenta refrescar igualmente</li>
+          <li>Medios en <code>MEDIOS_CON_PLATAFORMA_PROPIA</code> (Motor, Tiempo antiguo) → saltan validación</li>
+        </ul>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">press.ini</div><div class="fdesc">Si el token caduca, se sobreescribe con el JWT nuevo</div><span class="fop fop-rw">Lectura / Escritura</span></div>
+        <div class="file-item"><div class="fname">API GetPageKeys</div><div class="fdesc">ingress.pressreader.com → comprueba validez del token</div><span class="fop fop-net">Red</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO O-3 -->
+  <div class="flow open" id="o3">
+    <div class="flow-header" onclick="toggle('o3')">
+      <div class="flow-num num-blue">3</div>
+      <div class="flow-title">Llamar al downloader (PASO 2)</div>
+      <span class="flow-tag tag-script">run_descarga.py</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Importa <code>pressreader_downloader</code> y ejecuta <code>process_single_medium()</code> o <code>process_all_media()</code>.</p>
+      <div class="terminal">
+<span class="t-white">============================================================</span>
+<span class="t-info">PASO 2: Ejecutando descarga</span>
+<span class="t-white">============================================================</span>
+      </div>
+      <div class="section-note">A partir de aquí el flujo continúa en <strong>pressreader_downloader.py</strong> (ver sección siguiente).</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <hr class="divider">
+  <h2 id="auth">pressreader_auth.py — Autenticación por Navegador</h2>
+  <p>Se activa automáticamente cuando un token es inválido. También puede ejecutarse directamente: <code>python pressreader_auth.py</code></p>
+
+  <div class="flow open" id="a1">
+    <div class="flow-header" onclick="toggle('a1')">
+      <div class="flow-num num-purple">A</div>
+      <div class="flow-title">Intentar con cookies guardadas (ruta rápida)</div>
+      <span class="flow-tag tag-script">pressreader_auth.py</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Si existe <code>browser_session.json</code>, carga las cookies y navega directo al periódico para capturar el JWT sin hacer login.</p>
+      <div class="terminal">
+<span class="t-info">🌐 Iniciando autenticación en PressReader...</span>
+<span class="t-ok">  🍪 Cookies cargadas desde browser_session.json (36 cookies)</span>
+<span class="t-info">  🍪 Usando cookies de sesión guardadas...</span>
+<span class="t-ok">  ✅ JWT capturado con cookies guardadas (420 chars)</span>
+      </div>
+      <div class="decision">
+        <div class="decision-title">Si las cookies ya no funcionan</div>
+        <ul>
+          <li><span class="path-err">JWT no capturado en 10s →</span> <code>⚠️ Cookies guardadas ya no son válidas — haciendo login completo...</code></li>
+          <li>Flujo continúa en el <strong>Login Completo</strong> (paso B)</li>
+        </ul>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">browser_session.json</div><div class="fdesc">Cookies de sesión de Playwright</div><span class="fop fop-r">Lectura</span></div>
+        <div class="file-item"><div class="fname">pressreader.com</div><div class="fdesc">Navega al periódico para forzar requests autenticadas</div><span class="fop fop-net">Red (browser)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow" id="a2">
+    <div class="flow-header" onclick="toggle('a2')">
+      <div class="flow-num num-purple">B</div>
+      <div class="flow-title">Login completo (ruta lenta)</div>
+      <span class="flow-tag tag-script">pressreader_auth.py</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Abre Chromium headless, navega a <code>pressreader.com/es</code>, descarta el popup de región, hace click en "Conectarse" y llena el formulario.</p>
+      <div class="terminal">
+<span class="t-info">🌐 Iniciando autenticación en PressReader...</span>
+<span class="t-info">  Navegando a pressreader.com/es ...</span>
+<span class="t-ok">  popup-container-panel desactivado (click-through).</span>
+<span class="t-info">  Abriendo modal de login...</span>
+<span class="t-info">  Rellenando credenciales...</span>
+<span class="t-info">  Esperando confirmación de login...</span>
+<span class="t-ok">  💾 Cookies guardadas (36 cookies → browser_session.json)</span>
+<span class="t-info">  Navegando al ePaper para obtener JWT: https://www.pressreader.com/colombia/el-espectador</span>
+<span class="t-ok">  ✅ JWT Bearer autenticado capturado (420 chars)</span>
+      </div>
+      <div class="decision">
+        <div class="decision-title">Errores posibles</div>
+        <ul>
+          <li><span class="path-err">Credenciales rechazadas →</span> <code>❌ Credenciales rechazadas por PressReader. Revisa auth.env.</code></li>
+          <li><span class="path-err">Timeout 30s →</span> <code>Timeout durante la autenticación: ...</code></li>
+          <li><span class="path-err">JWT no aparece en 15s →</span> <code>Login completado pero no se capturó el JWT Bearer. Activa PRESSREADER_HEADED=true en auth.env para depurar.</code></li>
+          <li><span class="path-warn">Modal de login no cierra →</span> <code>Advertencia: no se confirmó cierre del modal, continuando...</code></li>
+        </ul>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">auth.env</div><div class="fdesc">PRESSREADER_EMAIL / PASSWORD</div><span class="fop fop-r">Lectura</span></div>
+        <div class="file-item"><div class="fname">browser_session.json</div><div class="fdesc">Se escribe con las cookies nuevas tras login exitoso</div><span class="fop fop-w">Escritura</span></div>
+        <div class="file-item"><div class="fname">pressreader.com</div><div class="fdesc">Login automático via Playwright Chromium</div><span class="fop fop-net">Red (browser)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <hr class="divider">
+  <h2 id="downloader">pressreader_downloader.py — Los 10 Pasos</h2>
+  <p>Flujo principal que se ejecuta para cada medio. Cada PASO tiene su bloque de prints para identificar fallos.</p>
+
+  <!-- PASO 1 -->
+  <div class="flow open" id="d1">
+    <div class="flow-header" onclick="toggle('d1')">
+      <div class="flow-num num-orange">1</div>
+      <div class="flow-title">Cargar configuración del medio (press.ini)</div>
+      <span class="flow-tag tag-script">load_medio_config()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <div class="terminal">
+<span class="t-white">══════════════════════════════════════════════════════════════════════</span>
+<span class="t-info">🚀 INICIANDO PROCESAMIENTO DEL MEDIO: Espectador</span>
+<span class="t-white">══════════════════════════════════════════════════════════════════════</span>
+<span class="t-white"></span>
+<span class="t-info">📋 PASO 1/10: Cargando configuración del medio Espectador...</span>
+<span class="t-white">Configuración cargada para medio: Espectador</span>
+<span class="t-white">Tokens disponibles: 1</span>
+<span class="t-white">Escalas de calidad (tm): [179, 180]</span>
+<span class="t-white">OCR habilitado: True</span>
+<span class="t-white">Procesamiento especial: None</span>
+<span class="t-ok">✅ Configuración cargada exitosamente</span>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">press.ini</div><div class="fdesc">Lee tokens, tm, libro, url_ids, ftp_path, base02, lock_file, etc.</div><span class="fop fop-r">Lectura</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="flow" id="d2">
+    <div class="flow-header" onclick="toggle('d2')">
+      <div class="flow-num num-orange">2</div>
+      <div class="flow-title">Archivo de lock (evitar ejecución doble)</div>
+      <span class="flow-tag tag-script">setup_lock_file()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Crea un archivo <code>.lock</code> en el directorio de descargas. Si ya existe, el script termina para evitar colisiones.</p>
+      <div class="terminal">
+<span class="t-info">🔒 PASO 2/10: Configurando archivo de lock para evitar ejecuciones concurrentes...</span>
+<span class="t-white">Archivo de lock creado: C:/Users/usuario/Downloads/Espectador.lock</span>
+<span class="t-ok">✅ Lock file configurado</span>
+<span class="t-white">   ← al terminar →</span>
+<span class="t-info">🔓 Liberando archivo de lock...</span>
+<span class="t-white">Archivo de lock eliminado</span>
+      </div>
+      <div class="decision">
+        <div class="decision-title">Si el lock ya existe</div>
+        <ul>
+          <li><span class="path-err">→</span> <code>Script ya en ejecución. Archivo de lock: C:/.../Espectador.lock</code></li>
+          <li>El proceso termina con <code>sys.exit(1)</code></li>
+          <li>Solución: borrar el .lock manualmente si no hay proceso activo</li>
+        </ul>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">Espectador.lock</div><div class="fdesc">C:/Users/usuario/Downloads/{lock_file}</div><span class="fop fop-rw">Crea / Elimina</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 3 -->
+  <div class="flow" id="d3">
+    <div class="flow-header" onclick="toggle('d3')">
+      <div class="flow-num num-orange">3</div>
+      <div class="flow-title">Fecha de la edición</div>
+      <span class="flow-tag tag-script">parse_date_args()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Determina la fecha: la actual o la indicada con <code>--fecha YYYY-MM-DD</code>.</p>
+      <div class="terminal">
+<span class="t-info">📅 PASO 3/10: Procesando fecha...</span>
+<span class="t-ok">✅ Fecha seleccionada: 2025-05-20</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 4 -->
+  <div class="flow" id="d4">
+    <div class="flow-header" onclick="toggle('d4')">
+      <div class="flow-num num-orange">4</div>
+      <div class="flow-title">Configurar rutas de trabajo</div>
+      <span class="flow-tag tag-script">process_single_medium()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Construye las rutas locales a partir de <code>rutabase</code>, <code>base02</code> y la fecha.</p>
+      <div class="terminal">
+<span class="t-info">💾 PASO 4/10: Configurando rutas de trabajo...</span>
+<span class="t-white">📁 Ruta de trabajo: C:/Users/usuario/Downloads/Diarios_local/Espectador/20250520</span>
+<span class="t-white">📄 Archivo de salida: C:/Users/usuario/Downloads/Diarios_local/Espectador/Espectador_20250520.pdf</span>
+<span class="t-ok">✅ Directorios creados</span>
+<span class="t-white"></span>
+<span class="t-info">📁 PASO 5/10: Creando subcarpetas de trabajo...</span>
+<span class="t-ok">✅ Carpetas creadas: imagenes/, pdf_paginas_ocr/</span>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">rutafin/</div><div class="fdesc">Carpeta raíz de la edición del día</div><span class="fop fop-w">Crea si no existe</span></div>
+        <div class="file-item"><div class="fname">rutafin/imagenes/</div><div class="fdesc">Donde van a parar los .jpg descargados</div><span class="fop fop-w">Crea si no existe</span></div>
+        <div class="file-item"><div class="fname">rutafin/pdf_paginas_ocr/</div><div class="fdesc">PDFs individuales con OCR</div><span class="fop fop-w">Crea si no existe</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 6 -->
+  <div class="flow" id="d6">
+    <div class="flow-header" onclick="toggle('d6')">
+      <div class="flow-num num-orange">6</div>
+      <div class="flow-title">¿Ya existe el PDF final?</div>
+      <span class="flow-tag tag-script">process_single_medium()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <div class="terminal">
+<span class="t-info">🔍 PASO 6/10: Verificando si el PDF ya existe...</span>
+<span class="t-ok">✅ PDF final ya existe: .../Espectador_20250520.pdf (38.5 MB)</span>
+<span class="t-muted">⏭️  Saltando proceso de descarga</span>
+<span class="t-white">   — ó —</span>
+<span class="t-err">❌ PDF no encontrado, procediendo con descarga</span>
+      </div>
+      <div class="decision">
+        <div class="decision-title">Decisión</div>
+        <ul>
+          <li><span class="path-ok">PDF existe → </span>retorna True sin descargar nada (reinicio seguro)</li>
+          <li><span class="path-err">No existe →</span> continúa con el paso 7</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 7 -->
+  <div class="flow" id="d7">
+    <div class="flow-header" onclick="toggle('d7')">
+      <div class="flow-num num-orange">7</div>
+      <div class="flow-title">Validar token y refrescar si es necesario</div>
+      <span class="flow-tag tag-script">_validar_token_actual() → _try_refresh_token()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Comprueba el token en la API antes de descargar. Si falla, activa el browser auth automáticamente.</p>
+      <div class="terminal">
+<span class="t-info">🌐 PASO 7/10: Configurando URLs y parámetros de descarga...</span>
+<span class="t-white">📚 Libro: ef58</span>
+<span class="t-white">🆔 URL IDs: ['00000000001001', '00000051001001']</span>
+<span class="t-ok">✅ Configuración de URLs completada</span>
+<span class="t-white"></span>
+<span class="t-info">🔑 Validando token contra API...</span>
+<span class="t-ok">  ✅ Token válido</span>
+<span class="t-white">   — ó si el token expiró —</span>
+<span class="t-err">  ❌ Token inválido o caducado</span>
+<span class="t-info">🔄 Obteniendo token fresco vía autenticación por navegador...</span>
+<span class="t-info">🌐 Iniciando autenticación en PressReader...</span>
+<span class="t-ok">  🍪 Cookies cargadas desde browser_session.json (36 cookies)</span>
+<span class="t-ok">  ✅ JWT capturado con cookies guardadas (420 chars)</span>
+<span class="t-ok">✅ Token fresco obtenido (420 chars)</span>
+<span class="t-ok">💾 Token guardado en press.ini [Espectador]</span>
+<span class="t-warn">⚠️  Ya se intentó refresco de token en esta sesión. No se reintentará.  ← si se llama dos veces</span>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">press.ini</div><div class="fdesc">Token JWT actualizado si era inválido</div><span class="fop fop-rw">Escritura (si hay refresco)</span></div>
+        <div class="file-item"><div class="fname">browser_session.json</div><div class="fdesc">Cookies usadas/actualizadas por el auth</div><span class="fop fop-rw">Lectura / Escritura</span></div>
+        <div class="file-item"><div class="fname">API GetPageKeys</div><div class="fdesc">ingress.pressreader.com para validar</div><span class="fop fop-net">Red</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 8 -->
+  <div class="flow" id="d8">
+    <div class="flow-header" onclick="toggle('d8')">
+      <div class="flow-num num-green">8</div>
+      <div class="flow-title">Descargar imágenes (núcleo del proceso)</div>
+      <span class="flow-tag tag-script">descargar_con_tokens() → intentar_descargar_imagenes() → calidades()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Obtiene el listado de páginas (PageKeys) de la API y descarga cada imagen usando <code>wget</code> con reintentos y timeout watchdog de 30s.</p>
+      <div class="terminal">
+<span class="t-info">📥 PASO 8/10: Descargando imágenes desde PressReader...</span>
+<span class="t-white">──────────────────────────────────────────────────────────────────────</span>
+<span class="t-info">🔑 Modo: Token único (1 token disponible)</span>
+<span class="t-white"></span>
+<span class="t-info">🔄 Intentando con URL ID: 00000000001001</span>
+<span class="t-white">Obteniendo PageKeys (Bearer JWT) desde: https://ingress.pressreader.com/...</span>
+<span class="t-ok">✅ PageKeys válidas para Espectador: 40 páginas</span>
+<span class="t-white">📄 Número de páginas esperadas: 40</span>
+<span class="t-white">  Página 1: Key=APqs6CKQQFJGR6CduftHs...</span>
+<span class="t-white">  Página 2: Key=BZrt7DLRRGKHS7DevguIt...</span>
+<span class="t-muted">  ... y 35 páginas más</span>
+<span class="t-white"></span>
+<span class="t-ok">✅ Iniciando descarga completa de 40 páginas...</span>
+<span class="t-info">📥 Descargando página 01...</span>
+<span class="t-white">  📁 Ruta de descarga: C:/.../20250520/imagenes/01.jpg</span>
+<span class="t-white">Intentando descarga con wget (scale=179, timeout_watchdog=30s): https://i.prcdn.co/img?file=ef58...</span>
+<span class="t-info">  Intento 1/3...</span>
+<span class="t-ok">  ✅ Descarga exitosa: C:/.../imagenes/01.jpg (145280 bytes)</span>
+<span class="t-white"></span>
+<span class="t-info">📥 Descargando página 02...</span>
+<span class="t-white">  📁 Ruta de descarga: C:/.../20250520/imagenes/02.jpg</span>
+<span class="t-warn">✅ Archivo ya existe: C:/.../imagenes/02.jpg (138752 bytes) - Saltando descarga</span>
+<span class="t-white"></span>
+<span class="t-err">  ❌ Fallo en intento 1 (rc=1)              ← si wget falla</span>
+<span class="t-warn">  🔄 Esperando 3 segundos antes del siguiente intento...</span>
+<span class="t-warn">  ⏰ Timeout/watchdog en intento 2 - posible proceso colgado.</span>
+<span class="t-warn">  🗑️ Archivo parcial eliminado: C:/.../imagenes/03.jpg</span>
+<span class="t-err">  💥 Todas las intentos fallaron para scale=179. Probando siguiente escala...</span>
+<span class="t-white">Intentando descarga con wget (scale=180, timeout_watchdog=30s): ...</span>
+<span class="t-ok">  ✅ Descarga exitosa: C:/.../imagenes/03.jpg (140800 bytes)</span>
+<span class="t-white"></span>
+<span class="t-ok">✅ Todas las 40 páginas descargadas exitosamente</span>
+<span class="t-ok">✅ Las páginas del JSON y las que están en la carpeta son correctas.</span>
+<span class="t-white">──────────────────────────────────────────────────────────────────────</span>
+<span class="t-ok">✅ PASO 8/10 completado: Descarga de imágenes finalizada exitosamente</span>
+
+<span class="t-muted">── Mensajes de verificación de progreso ──</span>
+<span class="t-white">📊 Estado de descarga: 30/40 páginas completadas   ← si se retoma una descarga</span>
+<span class="t-info">🔄 Páginas pendientes: [31, 32, 33, 34, 35]...</span>
+<span class="t-warn">⚠️ Se encontraron 2 imágenes adicionales fuera del rango esperable. Eliminando: [...]</span>
+<span class="t-warn">⚠️ Se detectó secuencia 01..39 incompleta respecto a 40.</span>
+<span class="t-muted">  🗑️ Eliminada la última imagen potencialmente truncada: 39.jpg</span>
+      </div>
+      <div class="decision">
+        <div class="decision-title">Validación de PageKeys — mensajes de error</div>
+        <ul>
+          <li><span class="path-err">Sin PageKeys en respuesta →</span> <code>❌ ERROR: No se encontró 'PageKeys' en la respuesta del servidor</code></li>
+          <li><span class="path-err">Lista vacía →</span> <code>❌ ERROR: La lista de PageKeys está vacía para {medio}</code></li>
+          <li><span class="path-err">Solo 1 página →</span> <code>❌ ERROR: Solo se encontraron 1 PageKey(s) → token expirado o fecha sin contenido</code></li>
+        </ul>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">imagenes/NN.jpg</div><div class="fdesc">Una imagen por página. Nombres: 01.jpg, 02.jpg…</div><span class="fop fop-w">Escritura</span></div>
+        <div class="file-item"><div class="fname">API prcdn.co</div><div class="fdesc">i.prcdn.co/img?file=libro&page=NN&ticket=KEY&scale=TM</div><span class="fop fop-net">Red (wget)</span></div>
+        <div class="file-item"><div class="fname">API GetPageKeys</div><div class="fdesc">Lista de claves por página</div><span class="fop fop-net">Red</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 9 -->
+  <div class="flow" id="d9">
+    <div class="flow-header" onclick="toggle('d9')">
+      <div class="flow-num num-green">9</div>
+      <div class="flow-title">Crear PDFs individuales con OCR</div>
+      <span class="flow-tag tag-script">crear_pdf_con_texto_superpuesto_para_carpeta()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Para cada imagen: convierte a escala de grises → OCR con Tesseract → genera PDF con imagen de fondo + texto invisible indexable.</p>
+      <div class="terminal">
+<span class="t-info">📄 PASO 9/10: Creando PDFs individuales con OCR desde imágenes...</span>
+<span class="t-white">🔍 Leyendo imágenes desde: C:/.../20250520/imagenes/</span>
+<span class="t-white">📊 Se procesarán 40 imágenes con OCR</span>
+<span class="t-white">──────────────────────────────────────────────────────────────────────</span>
+<span class="t-white">[PDF_CON_OCR] Procesando imagen 1/40: C:/.../imagenes/01.jpg</span>
+<span class="t-white">  🖼️ Procesando imagen: 01.jpg</span>
+<span class="t-white">  📐 Dimensiones: (2048, 3072)</span>
+<span class="t-info">  🔍 Iniciando OCR (método Nación - sin reducción)...</span>
+<span class="t-ok">  ✅ OCR completado - 187 bloques de texto detectados</span>
+<span class="t-ok">  ✅ PDF con OCR creado: C:/.../pdf_paginas_ocr/01.pdf</span>
+<span class="t-ok">[PDF_CON_OCR]  ✅ PDF creado (1/40): C:/.../pdf_paginas_ocr/01.pdf</span>
+<span class="t-white"></span>
+<span class="t-warn">  ⚠️ Error en PIL para 07.jpg: truncated. Intentando reparación con OpenCV...</span>
+<span class="t-ok">  🛠️ Imagen REPARADA y procesada: 07.jpg</span>
+<span class="t-warn">⚠️ Error en OCR para .../15.jpg: tesseract not found   ← si tesseract no está instalado</span>
+<span class="t-warn">  ⚠️ PDF básico creado (sin OCR): C:/.../pdf_paginas_ocr/15.pdf</span>
+<span class="t-err">  ❌ FALLA TOTAL en 33.jpg: cannot identify image file</span>
+<span class="t-warn">  ⚠️ SALTANDO PÁGINA 33 para evitar detener el proceso completo.</span>
+<span class="t-white">──────────────────────────────────────────────────────────────────────</span>
+<span class="t-ok">✅ PASO 9/10 completado: PDFs individuales con OCR creados</span>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">imagenes/NN.jpg</div><div class="fdesc">Entrada: imágenes descargadas</div><span class="fop fop-r">Lectura</span></div>
+        <div class="file-item"><div class="fname">pdf_paginas_ocr/NN.pdf</div><div class="fdesc">PDF por página con texto OCR superpuesto</div><span class="fop fop-w">Escritura</span></div>
+        <div class="file-item"><div class="fname">correcciones.json</div><div class="fdesc">Diccionario de correcciones OCR (opcional)</div><span class="fop fop-r">Lectura</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNIR PDFs -->
+  <div class="flow" id="d9b">
+    <div class="flow-header" onclick="toggle('d9b')">
+      <div class="flow-num num-green">9b</div>
+      <div class="flow-title">Unir PDFs en PDF final</div>
+      <span class="flow-tag tag-script">fitz merge</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <div class="terminal">
+<span class="t-info">📄 UNIR PDFs: Uniendo 40 PDFs en archivo final...</span>
+<span class="t-white">🔗 Procesando 40 páginas...</span>
+<span class="t-ok">✅ PDF final con OCR creado: C:/.../Espectador_20250520.pdf</span>
+<span class="t-white">📏 Tamaño del PDF final: 42.3 MB</span>
+<span class="t-white"></span>
+<span class="t-info">🧹 LIMPIEZA PASO A: Eliminando imágenes residuales de la raíz...</span>
+<span class="t-ok">✅ 0 imágenes residuales eliminadas</span>
+<span class="t-info">🧹 LIMPIEZA PASO B: Eliminando archivos temporales...</span>
+<span class="t-ok">✅ No hay archivos temporales para eliminar</span>
+<span class="t-white"></span>
+<span class="t-info">📝 PASO EXTRA: Creando PDF completo de texto (sin imagen) para validar calidad OCR...</span>
+<span class="t-white">  📁 Ruta PDF texto: C:/.../20250520/Espectador_20250520_texto_validacion.pdf</span>
+<span class="t-ok">✅ PDF completo de texto creado: .../Espectador_20250520_texto_validacion.pdf</span>
+<span class="t-white">📊 Total bloques de texto agregados: 7420</span>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">Medio_YYYYMMDD.pdf</div><div class="fdesc">PDF final unificado con OCR</div><span class="fop fop-w">Escritura</span></div>
+        <div class="file-item"><div class="fname">Medio_YYYYMMDD_texto_validacion.pdf</div><div class="fdesc">Solo texto para verificar calidad OCR</div><span class="fop fop-w">Escritura</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 10 -->
+  <div class="flow" id="d10">
+    <div class="flow-header" onclick="toggle('d10')">
+      <div class="flow-num num-green">10</div>
+      <div class="flow-title">Subir al FTP</div>
+      <span class="flow-tag tag-script">upload_images_to_ftp() / upload_pdfs_to_ftp() / upload_pdf_to_ftp()</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Sube: imágenes → subcarpeta <code>imagenes/</code>; PDFs de páginas → <code>pdf_paginas_ocr/</code>; PDF de validación y PDF final → raíz de la fecha.</p>
+      <div class="terminal">
+<span class="t-info">📤 PASO 10/10: Subiendo archivos al FTP desde subcarpetas...</span>
+<span class="t-white">🌐 Host FTP: 192.168.0.118</span>
+<span class="t-white">📂 Ruta FTP: /Espectador</span>
+<span class="t-white"></span>
+<span class="t-info">  📷 Subiendo 40 imágenes desde: imagenes/</span>
+<span class="t-white">Imagen 01.jpg subida a imagenes/ con éxito</span>
+<span class="t-white">Imagen 02.jpg subida a imagenes/ con éxito</span>
+<span class="t-muted">  ...</span>
+<span class="t-white"></span>
+<span class="t-info">  📄 Subiendo 40 PDFs de páginas desde: pdf_paginas_ocr/</span>
+<span class="t-ok">  ✅ PDF 01.pdf subido a pdf_paginas_ocr/ con éxito</span>
+<span class="t-muted">  ...</span>
+<span class="t-white"></span>
+<span class="t-info">  📝 Subiendo PDF de validación de OCR al FTP...</span>
+<span class="t-white">     📄 Archivo: Espectador_20250520_texto_validacion.pdf</span>
+<span class="t-ok">     ✅ PDF de validación subido al FTP exitosamente</span>
+<span class="t-white"></span>
+<span class="t-info">  📄 Subiendo PDF final al FTP...</span>
+<span class="t-white">PDF Espectador_20250520.pdf subido con éxito</span>
+<span class="t-ok">✅ Archivo PDF subido al FTP exitosamente</span>
+<span class="t-ok">✅ PASO 10/10 completado: Subida al FTP finalizada</span>
+<span class="t-white"></span>
+<span class="t-ok">══════════════════════════════════════════════════════════════════════</span>
+<span class="t-ok">🎉 PROCESO COMPLETADO EXITOSAMENTE PARA: Espectador</span>
+<span class="t-ok">══════════════════════════════════════════════════════════════════════</span>
+
+<span class="t-muted">── Si el FTP falla ──</span>
+<span class="t-err">Error FTP: 550 No such file or directory</span>
+<span class="t-err">❌ Error subiendo PDF (intento 1): connection refused</span>
+<span class="t-warn">⏳ Reintentando en 1 minuto...   ← reintenta indefinidamente hasta conseguirlo</span>
+<span class="t-warn">  ⚠️ No hay imágenes para subir   ← si imagenes/ está vacía</span>
+      </div>
+      <div class="files-grid">
+        <div class="file-item"><div class="fname">FTP /ftp_path/YYYYMMDD/imagenes/</div><div class="fdesc">Imágenes JPG de cada página</div><span class="fop fop-w">Escritura (FTP)</span></div>
+        <div class="file-item"><div class="fname">FTP /ftp_path/YYYYMMDD/pdf_paginas_ocr/</div><div class="fdesc">PDF por página con OCR</div><span class="fop fop-w">Escritura (FTP)</span></div>
+        <div class="file-item"><div class="fname">FTP /ftp_path/YYYYMMDD/Medio_YYYYMMDD.pdf</div><div class="fdesc">PDF final unificado</div><span class="fop fop-w">Escritura (FTP)</span></div>
+        <div class="file-item"><div class="fname">FTP /ftp_path/YYYYMMDD/*_texto_validacion.pdf</div><div class="fdesc">PDF de validación OCR</div><span class="fop fop-w">Escritura (FTP)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR GLOBAL -->
+  <div class="flow" id="derr">
+    <div class="flow-header" onclick="toggle('derr')">
+      <div class="flow-num num-orange" style="background:#2d0f0e;color:#f85149;border-color:#f85149">!</div>
+      <div class="flow-title">Error global — traceback completo</div>
+      <span class="flow-tag tag-script">process_single_medium() — bloque except</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="flow-body">
+      <p>Cualquier excepción no controlada muestra este bloque y libera el lock.</p>
+      <div class="terminal">
+<span class="t-err">══════════════════════════════════════════════════════════════════════</span>
+<span class="t-err">❌ ERROR PROCESANDO Espectador</span>
+<span class="t-err">══════════════════════════════════════════════════════════════════════</span>
+<span class="t-err">💥 Error: FileNotFoundError: [Errno 2] No such file or directory: 'wget'</span>
+<span class="t-err">📍 Tipo de error: FileNotFoundError</span>
+<span class="t-white"></span>
+<span class="t-err">📋 Traceback completo:</span>
+<span class="t-err">Traceback (most recent call last):</span>
+<span class="t-err">  File "pressreader_downloader.py", line 605, in calidades</span>
+<span class="t-err">    rc, out, err = self.runcmd(wget_cmd, verbose=False, timeout=timeout_seconds)</span>
+<span class="t-err">  ...</span>
+<span class="t-err">══════════════════════════════════════════════════════════════════════</span>
+<span class="t-white"></span>
+<span class="t-info">🔓 Liberando archivo de lock...</span>
+<span class="t-white">Archivo de lock eliminado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <hr class="divider">
+  <h2 id="archivos">Archivos del Sistema — Mapa Completo</h2>
+
+  <div class="files-grid" style="margin-bottom:20px">
+    <div class="file-item">
+      <div class="fname">press.ini</div>
+      <div class="fdesc">Configuración de todos los medios. Tokens, rutas, FTP, escalas de calidad.</div>
+      <span class="fop fop-rw">Lectura + sobreescritura de token cuando caduca</span>
+    </div>
+    <div class="file-item">
+      <div class="fname">auth.env</div>
+      <div class="fdesc">Credenciales: PRESSREADER_EMAIL y PRESSREADER_PASSWORD.<br>No compartir, no subir a git.</div>
+      <span class="fop fop-r">Solo lectura</span>
+    </div>
+    <div class="file-item">
+      <div class="fname">browser_session.json</div>
+      <div class="fdesc">Cookies de sesión del navegador. Si es válido evita el login completo.</div>
+      <span class="fop fop-rw">Lectura al inicio, escritura tras login</span>
+    </div>
+    <div class="file-item">
+      <div class="fname">rutafin/imagenes/NN.jpg</div>
+      <div class="fdesc">Una imagen por página. Se crean durante la descarga.</div>
+      <span class="fop fop-w">Solo escritura</span>
+    </div>
+    <div class="file-item">
+      <div class="fname">rutafin/pdf_paginas_ocr/NN.pdf</div>
+      <div class="fdesc">PDF individual con OCR por cada página.</div>
+      <span class="fop fop-w">Solo escritura</span>
+    </div>
+    <div class="file-item">
+      <div class="fname">Medio_YYYYMMDD.pdf</div>
+      <div class="fdesc">PDF final unificado. Si existe, el proceso se salta.</div>
+      <span class="fop fop-w">Solo escritura</span>
+    </div>
+    <div class="file-item">
+      <div class="fname">Medio_YYYYMMDD_texto_validacion.pdf</div>
+      <div class="fdesc">Solo el texto OCR, sin imágenes. Para verificar calidad.</div>
+      <span class="fop fop-w">Solo escritura</span>
+    </div>
+    <div class="file-item">
+      <div class="fname">{medio}.lock</div>
+      <div class="fdesc">Archivo de bloqueo. Impide dos instancias simultáneas.</div>
+      <span class="fop fop-rw">Crea al inicio, borra al final</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <hr class="divider">
+  <h2 id="errores">Tabla de Errores y Soluciones</h2>
+
+  <table>
+    <tr><th>Print / Mensaje</th><th>Causa</th><th>Solución</th></tr>
+    <tr>
+      <td><code>❌ Token inválido o caducado — refrescando...</code></td>
+      <td>El token en press.ini expiró</td>
+      <td>El sistema lo refresca solo. Si falla el refresco, revisar <code>auth.env</code>.</td>
+    </tr>
+    <tr>
+      <td><code>Login completado pero no se capturó el JWT Bearer</code></td>
+      <td>PressReader cambió el flujo de la web o bloqueó el bot</td>
+      <td>Activar <code>PRESSREADER_HEADED=true</code> en <code>auth.env</code> para ver el navegador.</td>
+    </tr>
+    <tr>
+      <td><code>❌ Credenciales rechazadas por PressReader</code></td>
+      <td>Email/password incorrectos en <code>auth.env</code></td>
+      <td>Actualizar <code>PRESSREADER_EMAIL</code> y <code>PRESSREADER_PASSWORD</code>.</td>
+    </tr>
+    <tr>
+      <td><code>Script ya en ejecución. Archivo de lock: ...</code></td>
+      <td>Un proceso anterior no terminó limpiamente</td>
+      <td>Borrar el archivo <code>.lock</code> indicado si no hay proceso activo.</td>
+    </tr>
+    <tr>
+      <td><code>❌ ERROR: No se encontró 'PageKeys' en la respuesta</code></td>
+      <td>Token inválido o API cambió formato</td>
+      <td>Verificar token con <code>run_descarga.py</code>. Si el token es nuevo, revisar la URL de la API.</td>
+    </tr>
+    <tr>
+      <td><code>❌ ERROR: Solo se encontraron 1 PageKey(s)</code></td>
+      <td>Token expirado o la fecha no tiene edición publicada</td>
+      <td>Verificar que el periódico publicó para esa fecha. Refrescar token.</td>
+    </tr>
+    <tr>
+      <td><code>⏰ Timeout/watchdog en intento N - posible proceso colgado</code></td>
+      <td>Conexión lenta o servidor colgado</td>
+      <td>El sistema reintenta automáticamente (3 veces). Si persiste, revisar conexión.</td>
+    </tr>
+    <tr>
+      <td><code>💥 Todas las intentos fallaron para scale=NNN</code></td>
+      <td>La escala de calidad no es válida para esa edición</td>
+      <td>Probar otra escala en <code>tm</code> dentro de <code>press.ini</code>.</td>
+    </tr>
+    <tr>
+      <td><code>❌ Todas las escalas y reintentos fallaron para la página NN</code></td>
+      <td>Página no disponible o conexión rota</td>
+      <td>Ejecutar de nuevo; el sistema retoma desde donde se quedó.</td>
+    </tr>
+    <tr>
+      <td><code>⚠️ Error en PIL para NN.jpg: truncated</code></td>
+      <td>Imagen descargada incompleta</td>
+      <td>Se intenta reparar con OpenCV. Si falla, se salta la página.</td>
+    </tr>
+    <tr>
+      <td><code>Error FTP: 550 No such file or directory</code></td>
+      <td>Ruta FTP no existe</td>
+      <td>El sistema intenta crear la carpeta automáticamente. Verificar <code>ftp_path</code> en press.ini.</td>
+    </tr>
+    <tr>
+      <td><code>❌ Error subiendo PDF (intento N): ...</code></td>
+      <td>FTP caído o sin conectividad</td>
+      <td>El sistema reintenta cada minuto indefinidamente. Revisar red o FTP 192.168.0.118.</td>
+    </tr>
+    <tr>
+      <td><code>⚠️ No se pudieron cargar cookies: ...</code></td>
+      <td><code>browser_session.json</code> corrupto</td>
+      <td>Borrar <code>browser_session.json</code>; se creará uno nuevo en el próximo login.</td>
+    </tr>
+    <tr>
+      <td><code>FileNotFoundError: auth.env no encontrado</code></td>
+      <td>Falta el archivo de credenciales</td>
+      <td>Crear <code>auth.env</code> con <code>PRESSREADER_EMAIL</code> y <code>PRESSREADER_PASSWORD</code>.</td>
+    </tr>
+    <tr>
+      <td><code>⚠️ Ya se intentó refresco de token en esta sesión</code></td>
+      <td>El token nuevo también falló</td>
+      <td>El token fue refrescado pero sigue sin funcionar. Verificar cuenta PressReader.</td>
+    </tr>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <hr class="divider">
+  <h2>Flujo completo de Publimetro (use_browser_auth=True)</h2>
+  <p>Publimetro tiene <code>use_browser_auth = True</code> en press.ini, lo que activa el refresco automático si todos los tokens estáticos fallan durante la descarga.</p>
+
+  <div class="terminal" style="margin-top:12px">
+<span class="t-white">run_descarga.py Publimetro</span>
+<span class="t-muted">│</span>
+<span class="t-muted">├─ PASO 1: Valida tokens estáticos de press.ini</span>
+<span class="t-ok">│   ✅ Token válido  → continúa al downloader directamente</span>
+<span class="t-err">│   ❌ Token inválido → llama a BrowserAuthenticator.get_fresh_token()</span>
+<span class="t-ok">│       ✅ JWT fresco obtenido (420 chars) → guardado en press.ini</span>
+<span class="t-muted">│</span>
+<span class="t-muted">├─ PASO 2: pressreader_downloader.py Publimetro</span>
+<span class="t-muted">│    ├─ Valida token antes de descargar (también llama browser auth si falla)</span>
+<span class="t-muted">│    ├─ Descarga 40+ imágenes en imagenes/</span>
+<span class="t-muted">│    ├─ OCR + PDFs individuales en pdf_paginas_ocr/</span>
+<span class="t-muted">│    ├─ PDF final: Publimetro_20250520.pdf</span>
+<span class="t-muted">│    └─ FTP: /Publimetros/20250520/{imagenes/, pdf_paginas_ocr/, Publimetro_20250520.pdf}</span>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+// Abrir todos al inicio ya están marcados con class "open"
+</script>
+</body>
+</html>
